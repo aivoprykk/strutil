@@ -91,17 +91,17 @@ void example_usage() {
 # Integration
 
 ## ESP-IDF
-To integrate the logger_str component into an ESP-IDF project, clone the GitHub repository into the components directory of your project:
+To integrate the strutil component into an ESP-IDF project, clone the GitHub repository into the components directory of your project:
 ```
 cd components; 
-git clone https://github.com/aivoprykk/logger_str.git
+git clone https://github.com/aivoprykk/strutil.git
 ```
 
 ## Standalone
 To use the strutil module as a standalone project, clone the GitHub repository and build it using CMake:
 ```
-git clone https://github.com/aivoprykk/logger_str.git
-cd logger_str
+git clone https://github.com/aivoprykk/strutil.git
+cd strutil
 mkdir build
 cd build
 cmake ..

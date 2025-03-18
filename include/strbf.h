@@ -46,6 +46,13 @@ extern "C" {
     SB * strbf_reset(SB *sb);
 
     /**
+     * @brief Grow string buffer if needed
+     * @param sb - pointer to string buffer
+     * @param need - new size of buffer
+     * */
+    void sb_grow(SB *sb, size_t need);
+
+    /**
      * @brief Put count bytes into string buffer
      * @param sb - pointer to string buffer
      * @param size - new size of buffer
@@ -93,26 +100,26 @@ extern "C" {
     SB *strbf_sprintf(SB *sb, const char *fmt, ...);
 
     /**
-     * @brief Put int32_t into string buffer
+     * @brief Put int64_t into string buffer
      * @param sb - pointer to string buffer
      * @param val - long value
      * */
-    void strbf_putl(SB *sb, long val);
+    void strbf_putl(SB *sb, int64_t val);
     #define strbf_putn strbf_putl
 
     /**
-     * @brief Put uint32_t into string buffer
+     * @brief Put uint64_t into string buffer
      * @param sb - pointer to string buffer
      * @param val - unsigned long value
      * */
-    void strbf_putul(SB *sb, uint32_t val);
+    void strbf_putul(SB *sb, uint64_t val);
 
     /**
      * @brief Put float into string buffer
      * @param sb - pointer to string buffer
-     * @param val - float value
+     * @param val - double value
      * */
-    void strbf_putf(SB *sb, float val);
+    void strbf_putf(SB *sb, double val);
 
     /**
      * @brief Put double into string buffer

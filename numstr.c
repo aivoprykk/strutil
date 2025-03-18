@@ -29,7 +29,7 @@ static const char digits[201] = "0001020304050607080910111213141516171819"
                                 "6061626364656667686970717273747576777879"
                                 "8081828384858687888990919293949596979899";
 
-size_t xint_len(size_t value) {
+size_t xint_len(uint64_t value) {
     size_t l = !value;
     while (value) {
         l++;
@@ -127,11 +127,11 @@ char *xftoa(double f, char *buf, int precision) {
     return buf;
 }
 
-size_t xultoa(unsigned long value, char *dst) {
+size_t xultoa(uint64_t value, char *dst) {
     assert(dst);
     size_t length = xint_len(value);
     size_t next = length - 1;
-    unsigned long i = 0;
+    uint64_t i = 0;
     while (value >= 100) {
         i = (value % 100) * 2;
         value /= 100;
@@ -150,11 +150,11 @@ size_t xultoa(unsigned long value, char *dst) {
     return length;
 }
 
-size_t xltoa(long value, char *dst) {
+size_t xltoa(int64_t value, char *dst) {
     assert(dst);
     size_t length = xint_len(value);
     size_t next = length - 1;
-    unsigned long i = 0;
+    uint64_t i = 0;
     if (value < 0) {
         value = -value;
         length++;
@@ -271,11 +271,11 @@ char *xdtostrf_b(double number, const int8_t width, const uint8_t prec, char *s,
 
 #define MSTRF(fn) if(f > 0){p+=fn(f, p);}else{*p++ = '0';*p = 0;}return p-str;
 
-size_t int_to_char(int32_t f, char *str) {
+size_t int_to_char(int64_t f, char *str) {
     char *p = str;MSTRF(xltoa);
 }
 
-size_t uint_to_char(uint32_t f, char *str) {
+size_t uint_to_char(uint64_t f, char *str) {
     char *p = str;MSTRF(xultoa);
 }
 

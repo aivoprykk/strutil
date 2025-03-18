@@ -23,7 +23,7 @@
 
 SB *strbf_init(SB *sb) {
   assert(sb);
-  sb->start = calloc(sizeof(char), BUFSIZ / 2);
+  sb->start = calloc(BUFSIZ / 2, sizeof(char));
   sb->cur = sb->start;
   sb->end = sb->start + BUFSIZ / 2 - 1;
   sb->max = 0;
@@ -58,7 +58,7 @@ SB *strbf_reset(SB *sb) {
       sb_grow(sb, need);                                                       \
   } while (0)
 
-static void sb_grow(SB *sb, size_t need) {
+void sb_grow(SB *sb, size_t need) {
   assert(sb && sb->start);
   assert(!sb->max || sb->max - sb->cur > need);
   if (sb->max)
@@ -71,7 +71,7 @@ static void sb_grow(SB *sb, size_t need) {
   } while (alloc < length + need);
 
   // sb->start = (char*) realloc(sb->start, alloc + 1);
-  char *data = calloc(sizeof(char), (int)alloc + 1);
+  char *data = calloc(alloc + 1, sizeof(char));
   memcpy(data, sb->start, length);
   free(sb->start);
   sb->start = data;
@@ -145,26 +145,26 @@ SB *strbf_sprintf(SB *sb, const char *fmt, ...) {
   return sb;
 }
 
-void strbf_putl(SB *sb, long val) {
-  char i[16] = {0}, *p = i;
+void strbf_putl(SB *sb, int64_t val) {
+  char i[64] = {0}, *p = i;
   size_t len = xltoa(val, p);
   strbf_put(sb, p, len);
 }
 
-void strbf_putul(SB *sb, uint32_t val) {
-  char i[16] = {0}, *p = i;
+void strbf_putul(SB *sb, uint64_t val) {
+  char i[64] = {0}, *p = i;
   size_t len = xultoa(val, p);
   strbf_put(sb, p, len);
 }
 
-void strbf_putf(SB *sb, float val) {
-  char i[16] = {0}, *p = i;
+void strbf_putf(SB *sb, double val) {
+  char i[64] = {0}, *p = i;
   xftoa(val, p, 16);
   strbf_put(sb, p, strlen(p));
 }
 
 void strbf_putd_b(SB *sb, double val, const int8_t width, const uint8_t perc, const uint8_t mark) {
-  char i[16] = {0}, *p = i;
+  char i[64] = {0}, *p = i;
   xdtostrf_b(val, width,  perc, p, mark);
   strbf_put(sb, p, strlen(p));
 }

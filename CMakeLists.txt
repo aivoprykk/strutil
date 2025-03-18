@@ -5,7 +5,7 @@ FILE(GLOB HDRS ${INC}/*.h)
 
 if(ESP_PLATFORM)
 
-#name is set to logger_str for ESP32
+#name is set to strutil for ESP32
 
 idf_component_register(
     SRCS ${SRCS}
@@ -37,7 +37,7 @@ MESSAGE("BUILD STATIC: ${${PACKAGE_NAME_U}_BUILD_STATIC}")
 MESSAGE("BUILD SHARED: ${${PACKAGE_NAME_U}_BUILD_SHARED}")
 MESSAGE("-----------------")
 
-project(${PROJECT_NAME} HOMEPAGE_URL https://github.com/aivoprykk/logger_str.git)
+project(${PROJECT_NAME} HOMEPAGE_URL https://github.com/aivoprykk/strutil.git)
 
 FILE(COPY ${HDRS} DESTINATION ${CMAKE_BINARY_DIR}/include)
 

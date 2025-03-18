@@ -8,17 +8,17 @@
 extern "C" {
 #endif
 
-size_t xultoa(unsigned long value, char *dst);
-size_t xltoa(long value, char *dst);
-size_t xint_len(size_t value);
+size_t xultoa(uint64_t value, char *dst);
+size_t xltoa(int64_t value, char *dst);
+size_t xint_len(uint64_t value);
 
 char *xftoa(double f, char *buf, int precision);
 
 char *xdtostrf_b(double val, const int8_t width, const uint8_t prec, char *sout, const uint8_t pad_digit);
 char *xdtostrf(double val, const int8_t width, const uint8_t prec, char *sout);
 
-size_t int_to_char(int32_t f, char *str);
-size_t uint_to_char(uint32_t f, char *str);
+size_t int_to_char(int64_t f, char *str);
+size_t uint_to_char(uint64_t f, char *str);
 
 size_t time_to_char_hm(int16_t h, int16_t m, char *str);
 size_t time_to_char_hms(uint8_t h, uint8_t m, uint8_t s, char *str);
