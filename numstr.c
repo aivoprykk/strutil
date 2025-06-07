@@ -294,7 +294,7 @@ size_t time_to_char_hm(int16_t h, int16_t m, char *str) {
     return p-str;
 }
 
-size_t time_to_char_hms(uint8_t h, uint8_t m, uint8_t s, char *str) {
+size_t time_to_char_hms(int h, int m, int s, char *str) {
     char *p = str;
     p+=time_to_char_hm(h, m, p);
     *p++ = ':';

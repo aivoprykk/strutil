@@ -21,7 +21,7 @@ size_t int_to_char(int64_t f, char *str);
 size_t uint_to_char(uint64_t f, char *str);
 
 size_t time_to_char_hm(int16_t h, int16_t m, char *str);
-size_t time_to_char_hms(uint8_t h, uint8_t m, uint8_t s, char *str);
+size_t time_to_char_hms(int h, int m, int s, char *str);
 size_t date_to_char(int16_t d, int16_t m, int16_t y, uint8_t format, char *str);
 size_t sec_to_hms_str(uint32_t sec, char *str);
 

@@ -78,7 +78,7 @@ void example_usage() {
 - size_t int_to_char(int32_t f, char *str): Convert an integer to a string.
 - size_t uint_to_char(uint32_t f, char *str): Convert an unsigned integer to a string.
 - size_t time_to_char_hm(int16_t h, int16_t m, char *str): Convert hours and minutes to a string.
-- size_t time_to_char_hms(uint8_t h, uint8_t m, uint8_t s, char *str): Convert hours, minutes, and seconds to a string.
+- size_t time_to_char_hms(int h, int m, int s, char *str): Convert hours, minutes, and seconds to a string.
 - size_t date_to_char(int16_t d, int16_t m, int16_t y, uint8_t format, char *str): Convert a date to a string with specified format.
 - size_t sec_to_hms_str(uint32_t sec, char *str): Convert seconds to a string in hours, minutes, and seconds format.
 - size_t f_to_char_f(double f, char *str, uint8_t fractionlen, uint8_t padlen): Convert a float to a string with specified fraction length and padding.
