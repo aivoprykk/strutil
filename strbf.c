@@ -8,7 +8,6 @@
 #if defined(ESP_PLATFORM)
 #include "logger_common.h"
 #else
-#include <assert.h>
 #include <stdio.h>
 #endif
 
@@ -22,7 +21,7 @@
 #endif
 
 SB *strbf_init(SB *sb) {
-  assert(sb);
+  if(!sb) return NULL;
   sb->start = calloc(BUFSIZ / 2, sizeof(char));
   sb->cur = sb->start;
   sb->end = sb->start + BUFSIZ / 2 - 1;
@@ -31,7 +30,7 @@ SB *strbf_init(SB *sb) {
 }
 
 SB *strbf_inits(SB *sb, char *str, size_t len) {
-  assert(sb && str);
+  if(!sb || !str) return NULL;
   memset(str, 0, len);
   sb->start = str;
   sb->cur = sb->start;
@@ -41,7 +40,7 @@ SB *strbf_inits(SB *sb, char *str, size_t len) {
 }
 
 SB *strbf_reset(SB *sb) {
-  assert(sb);
+  if(!sb) return NULL;
   if (!sb->start)
     strbf_init(sb);
   else {
@@ -59,10 +58,9 @@ SB *strbf_reset(SB *sb) {
   } while (0)
 
 void sb_grow(SB *sb, size_t need) {
-  assert(sb && sb->start);
-  assert(!sb->max || sb->max - sb->cur > need);
-  if (sb->max)
-    return;
+  if(!sb || !sb->start) return;
+  if(sb->max && sb->max - sb->cur > need) return;
+  if (sb->max) return;
   size_t length = sb->cur - sb->start;
   size_t alloc = sb->end - sb->start;
 
@@ -80,7 +78,7 @@ void sb_grow(SB *sb, size_t need) {
 }
 
 void strbf_put(SB *sb, const char *bytes, size_t count) {
-  assert(sb && sb->start);
+  if(!sb || !sb->start) return;
   if (bytes && count) {
     sb_need(sb, count);
     memcpy(sb->cur, bytes, count);
@@ -89,7 +87,7 @@ void strbf_put(SB *sb, const char *bytes, size_t count) {
 }
 
 void strbf_putu(SB *sb, const uint8_t *bytes, size_t count) {
-  assert(sb && sb->start);
+  if(!sb || !sb->start) return;
   if (bytes && count) {
     sb_need(sb, count);
     memcpy(sb->cur, bytes, count);
@@ -106,7 +104,7 @@ void strbf_putu(SB *sb, const uint8_t *bytes, size_t count) {
 */
 
 void strbf_putc(SB *sb, const char c) {
-  assert(sb && sb->start);
+  if(!sb || !sb->start) return;
   if (sb->cur >= sb->end)
     sb_grow(sb, 1);
   *sb->cur++ = c;
@@ -119,7 +117,7 @@ SB *strbf_puts(SB *sb, const char *str) {
 }
 
 SB *strbf_puts_v(SB *sb, int argc, ...) {
-  assert(sb);
+  if(!sb) return NULL;
   va_list ptr;
   va_start(ptr, argc);
   const char *str = 0;
@@ -132,7 +130,7 @@ SB *strbf_puts_v(SB *sb, int argc, ...) {
 }
 
 SB *strbf_sprintf(SB *sb, const char *fmt, ...) {
-  assert(sb);
+  if(!sb) return NULL;
   va_list ptr;
   va_start(ptr, fmt);
   size_t len = vsnprintf(0, 0, fmt, ptr); // get the length
@@ -178,7 +176,7 @@ void strbf_putd(SB *sb, double val, const int8_t width, const uint8_t perc) {
 */
 
 static SB *_put_pathsep(SB *sb, char sep) {
-  assert(sb);
+  if(!sb) return NULL;
   if (!sep)
     sep = '/';
   if (sb->start && sb->cur && sb->cur > sb->start && *(sb->cur - 1) != sep)
@@ -187,19 +185,19 @@ static SB *_put_pathsep(SB *sb, char sep) {
 }
 
 SB *strbf_put_pathsep(SB *sb) {
-  assert(sb);
+  if(!sb) return NULL;
   _put_pathsep(sb, 0);
   return sb;
 }
 
 SB *strbf_put_urisep(SB *sb) {
-  assert(sb);
+  if(!sb) return NULL;
   _put_pathsep(sb, '/');
   return sb;
 }
 
 SB *_put_path(SB *sb, const char *str, char sep) {
-  assert(sb);
+  if(!sb) return NULL;
   if (str) {
     if (*str == sep) {
       if (sb->cur > sb->start && *(sb->cur - 1) == sep)
@@ -213,7 +211,7 @@ SB *_put_path(SB *sb, const char *str, char sep) {
 }
 
 SB *_put_path_n(SB *sb, const char *str, char sep, size_t len) {
-  assert(sb);
+  if(!sb) return NULL;
   if (str) {
     if (*str == sep) {
       if (sb->cur > sb->start && *(sb->cur - 1) == sep)
@@ -231,7 +229,7 @@ SB *strbf_put_path(SB *sb, const char *str) { return _put_path(sb, str, '/'); }
 SB *strbf_put_path_n(SB *sb, const char *str, size_t len) { return _put_path_n(sb, str, '/', len); }
 
 SB *strbf_put_path_at(SB *sb, const char *str, size_t len) {
-  assert(sb);
+  if(!sb) return NULL;
   strbf_shape(sb, len);
   return strbf_put_path(sb, str);
 }
@@ -239,13 +237,13 @@ SB *strbf_put_path_at(SB *sb, const char *str, size_t len) {
 SB *strbf_put_uri(SB *sb, const char *str) { return _put_path(sb, str, '/'); }
 
 SB *strbf_put_uri_at(SB *sb, const char *str, size_t len) {
-  assert(sb);
+  if(!sb) return NULL;
   strbf_shape(sb, len);
   return strbf_put_uri(sb, str);
 }
 
 SB *strbf_put_path_v(SB *sb, int argc, ...) {
-  assert(sb);
+  if(!sb) return NULL;
   va_list ptr;
   va_start(ptr, argc);
   const char *str = 0;
@@ -258,7 +256,7 @@ SB *strbf_put_path_v(SB *sb, int argc, ...) {
 }
 
 SB *strbf_put_uri_v(SB *sb, int argc, ...) {
-  assert(sb);
+  if(!sb) return NULL;
   va_list ptr;
   va_start(ptr, argc);
   const char *str = 0;
@@ -271,7 +269,7 @@ SB *strbf_put_uri_v(SB *sb, int argc, ...) {
 }
 
 static SB *_pop_path(SB *sb, char sep) {
-  assert(sb);
+  if(!sb) return NULL;
   if (sb->cur) {
     if (!sep)
       sep = '/';
@@ -293,11 +291,11 @@ SB *strbf_pop_path(SB *sb) { return _pop_path(sb, 0); }
 SB *strbf_pop_url(SB *sb) { return _pop_path(sb, '/'); }
 
 static SB *_insert_pathsep(SB *sb, char sep, size_t at) {
-  assert(sb);
+  if(!sb) return NULL;
   if (!sep)
     sep = '/';
   char *a = sb->start + at;
-  assert(a >= sb->start && a <= sb->cur);
+  if(a < sb->start || a > sb->cur) return sb;
   if (a > sb->start && *(a - 1) != sep)
     strbf_insertc(sb, sep, at++);
 
@@ -305,22 +303,22 @@ static SB *_insert_pathsep(SB *sb, char sep, size_t at) {
 }
 
 SB *strbf_insert_pathsep(SB *sb, size_t at) {
-  assert(sb);
+  if(!sb) return NULL;
   _insert_pathsep(sb, 0, at);
   return sb;
 }
 
 SB *strbf_insert_urisep(SB *sb, size_t at) {
-  assert(sb);
+  if(!sb) return NULL;
   _insert_pathsep(sb, '/', at);
   return sb;
 }
 
 static SB *_insert_path(SB *sb, const char *str, size_t at, char sep) {
-  assert(sb);
+  if(!sb) return NULL;
   if (str) {
     char *a = sb->start + at, *b = a;
-    assert(a >= sb->start && a <= sb->cur);
+    if(a < sb->start || a > sb->cur) return sb;
     if (*str == sep) {
       if (a > sb->start && *(a - 1) == sep) {
         a -= 1;
@@ -348,20 +346,20 @@ SB *strbf_insert_uri(SB *sb, const char *str, size_t at) {
 }
 
 void strbf_concat(SB *sb, const char *str, size_t count) {
-  assert(sb && sb->cur);
+  if(!sb || !sb->cur) return;
   strbf_put(sb, str, count);
   *sb->cur = 0;
 }
 
 void strbf_concatc(SB *sb, const char c) {
-  assert(sb && sb->cur);
+  if(!sb || !sb->cur) return;
   strbf_putc(sb, c);
   *sb->cur = 0;
 }
 
 void strbf_concats(SB *sb, const char *str) {
   if (str) {
-    assert(sb && sb->cur);
+    if(!sb || !sb->cur) return;
     strbf_put(sb, str, strlen(str));
     *sb->cur = 0;
   }
@@ -369,7 +367,7 @@ void strbf_concats(SB *sb, const char *str) {
 
 void strbf_insert(SB *sb, const char *str, size_t after, size_t count) {
   if (str) {
-    assert(sb && sb->cur);
+    if(!sb || !sb->cur) return;
     if (!count)
       count = strlen(str);
     sb_need(sb, count);
@@ -383,7 +381,7 @@ void strbf_insert(SB *sb, const char *str, size_t after, size_t count) {
 
 void strbf_insertc(SB *sb, const char str, size_t after) {
   if (str) {
-    assert(sb && sb->cur);
+    if(!sb || !sb->cur) return;
     if (sb->cur >= sb->end)
       sb_grow(sb, 1);
     memmove(sb->start + after + 1, sb->start + after,
@@ -402,7 +400,7 @@ void strbf_inserts(SB *sb, const char *str, size_t after) {
 
 void strbf_prepend(SB *sb, const char *str, size_t count) {
   if (str) {
-    assert(sb && sb->cur);
+    if(!sb || !sb->cur) return;
     if (!count)
       count = strlen(str);
     sb_need(sb, count);
@@ -414,7 +412,7 @@ void strbf_prepend(SB *sb, const char *str, size_t count) {
 }
 
 void strbf_prependc(SB *sb, const char c) {
-  assert(sb && sb->start);
+  if(!sb || !sb->start) return;
   if (sb->cur >= sb->end)
     sb_grow(sb, 1);
   memmove(sb->start + 1, sb->start, sb->cur - sb->start);
@@ -431,7 +429,7 @@ void strbf_prepends(SB *sb, const char *str) {
 
 void strbf_shift(SB *sb, size_t count) {
   if (count) {
-    assert(sb && sb->start);
+    if(!sb || !sb->start) return;
     memmove(sb->start, sb->start + count, sb->cur - sb->start - count);
     sb->cur -= count;
   }
@@ -439,20 +437,20 @@ void strbf_shift(SB *sb, size_t count) {
 
 void strbf_pop(SB *sb, size_t count) {
   if (count) {
-    assert(sb && sb->start);
+    if(!sb || !sb->start) return;
     sb->cur -= count;
   }
 }
 
 strbf_t *strbf_shape(SB *sb, size_t count) {
-    assert(sb && sb->start);
+    if(!sb || !sb->start) return 0;
     sb->cur = sb->start + count;
     *sb->cur = 0;
   return sb;
 }
 
 void strbf_trim(SB *sb) {
-  assert(sb && sb->start);
+  if(!sb || !sb->start) return;
   if (sb->start) {
     // Right trim
     while (sb->cur>sb->start && is_spacing((sb->cur - 1))) {
@@ -470,9 +468,9 @@ void strbf_trim(SB *sb) {
 }
 
 char *strbf_finish(const SB *sb) {
-  assert(sb && sb->start);
+  if(!sb || !sb->start) return 0;
   *sb->cur = 0;
-  assert(sb->start <= sb->cur && strlen(sb->start) == (size_t)(sb->cur - sb->start));
+  if(sb->start > sb->cur || strlen(sb->start) != (size_t)(sb->cur - sb->start)) return 0;
   return sb->start;
 }
 
@@ -482,17 +480,17 @@ char *strbf_finish_url(SB *sb) {
 }
 
 char *strbf_get(const SB *sb) {
-  assert(sb && sb->start);
+  if(!sb || !sb->start) return 0;
   return sb->start;
 }
 
 size_t strbf_len(SB *sb) {
-  assert(sb && sb->start);
+  if(!sb || !sb->start) return 0;
   return sb->cur - sb->start;
 }
 
 char *strbf_cur(SB *sb) {
-  assert(sb && sb->start);
+  if(!sb || !sb->start) return 0;
   return sb->cur;
 }
 

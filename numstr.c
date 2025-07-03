@@ -1,6 +1,5 @@
 #include <math.h>
 #include <string.h>
-#include <assert.h>
 #include <stdbool.h>
 
 #include "numstr.h"
@@ -128,7 +127,7 @@ char *xftoa(double f, char *buf, int precision) {
 }
 
 size_t xultoa(uint64_t value, char *dst) {
-    assert(dst);
+    if(!dst) return 0;
     size_t length = xint_len(value);
     size_t next = length - 1;
     uint64_t i = 0;
@@ -151,7 +150,7 @@ size_t xultoa(uint64_t value, char *dst) {
 }
 
 size_t xltoa(int64_t value, char *dst) {
-    assert(dst);
+    if(!dst) return 0;
     size_t length = xint_len(value);
     size_t next = length - 1;
     uint64_t i = 0;
@@ -420,29 +419,34 @@ size_t concat(char *dst, size_t dlen, const char *src, size_t len) {
     return dlen;
 }
 
-size_t sec_to_hms_str(uint32_t sec, char *str)
-{
+size_t sec_to_hms_str(uint32_t sec, char *str, bool two_segments) {
     uint16_t h = sec / 3600;
     uint16_t m = (sec / 60) % 60;
     uint16_t s = sec % 60;
     char *p = str;
-    size_t len = 8;
-    memcpy(p, "00:00:00", len), *(p+len)=0;
-    // printf ("sec_to_hms_str: %d %d %d\n", h, m, s);
-    if(h>0){
+    const char * mask = two_segments ? "00:00" : "00:00:00"; 
+    size_t len = two_segments ? 5 : 8;
+    memcpy(p, mask, len), *(p+len)=0;
+    printf ("sec_to_hms_str: %d %d %d: %s\n", h, m, s, mask);
+    if(h > 0){
         if(h<10) ++p;
-        p += xultoa(h, p), *p=':';
+        p += xultoa(h, p);
+        *(p++) = ':';
+    } else if(!two_segments) {
+        p += 3;
     }
-    if(m>0){
-        p = str+(len-5);
+    // now p is at the end of the hour segment if h > 0
+    if(m > 0) {
         if(m<10) ++p;
-        p += xultoa(m, p), *p=':';
+        p += xultoa(m, p);
+        if(p < (str+len)) *(p++) = ':';
+    } else {
+        p += 3;
     }
-    if(s>0){
-        p = str+(len-2);
+    if(s > 0 && p < (str+len)) {
         if(s<10) ++p;
         p += xultoa(s, p);
     }
-    // printf ("sec_to_hms_str: %s\n", str);
+    printf ("sec_to_hms_str: %s\n", str);
     return len;
 }

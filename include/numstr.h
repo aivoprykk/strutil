@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -23,7 +24,7 @@ size_t uint_to_char(uint64_t f, char *str);
 size_t time_to_char_hm(int16_t h, int16_t m, char *str);
 size_t time_to_char_hms(int h, int m, int s, char *str);
 size_t date_to_char(int16_t d, int16_t m, int16_t y, uint8_t format, char *str);
-size_t sec_to_hms_str(uint32_t sec, char *str);
+size_t sec_to_hms_str(uint32_t sec, char *str, bool hide_sec);
 
 size_t f_to_char_f(double f, char *str, uint8_t fractionlen, uint8_t padlen);
 size_t f_to_char(double f, char *str, uint8_t fractionlength);
