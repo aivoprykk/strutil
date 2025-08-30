@@ -1,6 +1,7 @@
 #include <math.h>
 #include <string.h>
 #include <stdbool.h>
+#include <stdio.h>
 
 #include "numstr.h"
 #if defined(ESP_PLATFORM)
