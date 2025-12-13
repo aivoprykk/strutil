@@ -111,7 +111,7 @@ void strbf_putc(SB *sb, const char c) {
 }
 
 SB *strbf_puts(SB *sb, const char *str) {
-  if (str)
+  if (str && *str)
     strbf_put(sb, str, strlen(str));
   return sb;
 }
