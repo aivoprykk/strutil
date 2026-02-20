@@ -44,7 +44,9 @@ SB *strbf_reset(SB *sb) {
   if (!sb->start)
     strbf_init(sb);
   else {
-    memset(sb->start, 0, (sb->max ? sb->max : sb->end) - sb->start);
+    /* Calculate correct buffer size based on type */
+    size_t bufsize = sb->max ? (sb->max - sb->start + 1) : (sb->end - sb->start + 1);
+    memset(sb->start, 0, bufsize);
     sb->cur = sb->start;
   }
   return sb;
@@ -53,14 +55,27 @@ SB *strbf_reset(SB *sb) {
 /* sb and need may be evaluated multiple times. */
 #define sb_need(sb, need)                                                      \
   do {                                                                         \
-    if ((sb)->end - (sb)->cur < (need))                                        \
-      sb_grow(sb, need);                                                       \
+    /* Check max for fixed buffers, end for dynamic buffers */                \
+    if (!(sb)->max && (size_t)((sb)->end - (sb)->cur) < (need)) {                    \
+      sb_grow(sb, need);    /* Dynamic buffer needs growth */                 \
+    }                                                                          \
   } while (0)
 
 void sb_grow(SB *sb, size_t need) {
   if(!sb || !sb->start) return;
-  if(sb->max && sb->max - sb->cur > need) return;
-  if (sb->max) return;
+
+  /* Fixed-size buffer: check bounds but cannot grow */
+  if(sb->max) {
+    if((size_t)(sb->max - sb->cur) >= need) return;  /* Has space */
+    /* Buffer overflow: cannot grow fixed buffer - data will be truncated */
+#if defined(ESP_PLATFORM)
+    printf("E: strbf: Fixed buffer overflow: need %zu, available %td",
+             need, sb->max - sb->cur);
+#endif
+    return;  /* Cannot grow fixed buffers */
+  }
+
+  /* Dynamic buffer: grow to fit */
   size_t length = sb->cur - sb->start;
   size_t alloc = sb->end - sb->start;
 
@@ -105,8 +120,7 @@ void strbf_putu(SB *sb, const uint8_t *bytes, size_t count) {
 
 void strbf_putc(SB *sb, const char c) {
   if(!sb || !sb->start) return;
-  if (sb->cur >= sb->end)
-    sb_grow(sb, 1);
+  sb_need(sb, 1);
   *sb->cur++ = c;
 }
 
@@ -143,28 +157,69 @@ SB *strbf_sprintf(SB *sb, const char *fmt, ...) {
   return sb;
 }
 
+// Buffer size requirements:
+// - int64_t max:  20 chars + null = 21 bytes (-9,223,372,036,854,775,808)
+// - uint64_t max: 20 chars + null = 21 bytes (18,446,744,073,709,551,615)
+// - double: up to 25+ chars depending on value and precision
+// - xdtostrf_b: width parameter can request large padding
+// Use 32 bytes for safety margin
+#define NUM_MAX_DIGITS 32
+
+/// @brief Put a signed long value into the string buffer.
+/// @param sb
+/// @param val
 void strbf_putl(SB *sb, int64_t val) {
-  char i[64] = {0}, *p = i;
-  size_t len = xltoa(val, p);
-  strbf_put(sb, p, len);
+  sb_need(sb, NUM_MAX_DIGITS); // Ensure enough space for int64 (needs up to 21 bytes)
+  /* Check if we actually have space (fixed buffer may not grow) */
+  // size_t available = sb->max ? (size_t)(sb->max - sb->cur) : (size_t)(sb->end - sb->cur);
+  // if (available < 21) return; /* Not enough space, abort */
+  sb->cur += xltoa(val, sb->cur);
 }
 
+/// @brief Put an unsigned long value into the string buffer.
+/// @param sb
+/// @param val
 void strbf_putul(SB *sb, uint64_t val) {
-  char i[64] = {0}, *p = i;
-  size_t len = xultoa(val, p);
-  strbf_put(sb, p, len);
+  sb_need(sb, NUM_MAX_DIGITS); // Ensure enough space for uint64 (needs up to 21 bytes)
+  /* Check if we actually have space (fixed buffer may not grow) */
+  // size_t available = sb->max ? (size_t)(sb->max - sb->cur) : (size_t)(sb->end - sb->cur);
+  // if (available < 21) return; /* Not enough space, abort */
+  sb->cur += xultoa(val, sb->cur);
 }
 
+/// @brief  Put a double value into the string buffer with 2 decimal places.
+/// @param sb
+/// @param val
 void strbf_putf(SB *sb, double val) {
-  char i[64] = {0}, *p = i;
-  xftoa(val, p, 16);
-  strbf_put(sb, p, strlen(p));
+  strbf_putfd(sb, val, 2);
+}
+
+/// @brief  Put a double value into the string buffer with specified decimal places.
+/// @param sb
+/// @param val
+/// @param perc
+void strbf_putfd(SB *sb, double val, const uint8_t perc) {
+  sb_need(sb, NUM_MAX_DIGITS); // Ensure enough space for double
+  /* Check if we actually have space (fixed buffer may not grow) */
+  // size_t available = sb->max ? (size_t)(sb->max - sb->cur) : (size_t)(sb->end - sb->cur);
+  // if (available < 25) return; /* Not enough space for worst-case double */
+  sb->cur += xftoa(val, sb->cur, perc);
 }
 
 void strbf_putd_b(SB *sb, double val, const int8_t width, const uint8_t perc, const uint8_t mark) {
-  char i[64] = {0}, *p = i;
-  xdtostrf_b(val, width,  perc, p, mark);
-  strbf_put(sb, p, strlen(p));
+  size_t need = NUM_MAX_DIGITS;
+  if (width > 0) {
+    size_t width_need = (size_t)width + (size_t)perc + 3;
+    if (width_need > need) {
+      need = width_need;
+    }
+  }
+  sb_need(sb, need); // Ensure enough space for requested format (dynamic buffers)
+  /* Check if we actually have space (fixed buffer may not grow) */
+  // size_t available = sb->max ? (size_t)(sb->max - sb->cur) : (size_t)(sb->end - sb->cur);
+  // size_t needed = (width > 0 ? width : 10) + perc + 2; /* width + precision + sign + decimal */
+  // if (available < needed) return; /* Not enough space, abort */
+  sb->cur += xdtostrf_b(val, width,  perc, sb->cur, mark);
 }
 
 void strbf_putd(SB *sb, double val, const int8_t width, const uint8_t perc) {
@@ -382,8 +437,7 @@ void strbf_insert(SB *sb, const char *str, size_t after, size_t count) {
 void strbf_insertc(SB *sb, const char str, size_t after) {
   if (str) {
     if(!sb || !sb->cur) return;
-    if (sb->cur >= sb->end)
-      sb_grow(sb, 1);
+    sb_need(sb, 1);
     memmove(sb->start + after + 1, sb->start + after,
             sb->cur - sb->start + after);
     *(sb->start + after) = str;
@@ -413,8 +467,7 @@ void strbf_prepend(SB *sb, const char *str, size_t count) {
 
 void strbf_prependc(SB *sb, const char c) {
   if(!sb || !sb->start) return;
-  if (sb->cur >= sb->end)
-    sb_grow(sb, 1);
+  sb_need(sb, 1);
   memmove(sb->start + 1, sb->start, sb->cur - sb->start);
   *sb->start = c;
   sb->cur += 1;

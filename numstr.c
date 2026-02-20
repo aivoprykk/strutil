@@ -38,7 +38,7 @@ size_t xint_len(uint64_t value) {
     return l;
 }
 
-char *xftoa(double f, char *buf, int precision) {
+size_t xftoa(double f, char *buf, int precision) {
     char *ptr = buf;
     char *p = ptr;
     char *p1;
@@ -124,7 +124,7 @@ char *xftoa(double f, char *buf, int precision) {
     // terminating zero
     *ptr = 0;
 
-    return buf;
+    return ptr - buf;
 }
 
 size_t xultoa(uint64_t value, char *dst) {
@@ -152,26 +152,32 @@ size_t xultoa(uint64_t value, char *dst) {
 
 size_t xltoa(int64_t value, char *dst) {
     if(!dst) return 0;
-    size_t length = xint_len(value);
+    uint64_t uvalue = (uint64_t)value;
+    bool is_negative = value < 0;
+
+    if (is_negative) {
+        uvalue = ~uvalue + 1;
+    }
+
+    size_t length = xint_len(uvalue) + (is_negative ? 1 : 0);
     size_t next = length - 1;
     uint64_t i = 0;
-    if (value < 0) {
-        value = -value;
-        length++;
-        next++;
+
+    if (is_negative) {
         *dst = '-';
     }
-    while (value >= 100) {
-        i = (value % 100) * 2;
-        value /= 100;
+
+    while (uvalue >= 100) {
+        i = (uvalue % 100) * 2;
+        uvalue /= 100;
         dst[next] = digits[i + 1];
         dst[next - 1] = digits[i];
         next -= 2;
     }
-    if (value < 10) {
-        dst[next] = '0' + value;
+    if (uvalue < 10) {
+        dst[next] = '0' + uvalue;
     } else {
-        i = value * 2;
+        i = uvalue * 2;
         dst[next] = digits[i + 1];
         dst[next - 1] = digits[i];
     }
@@ -179,27 +185,27 @@ size_t xltoa(int64_t value, char *dst) {
     return length;
 }
 
-char *xdtostrf(double number, const int8_t width, const uint8_t prec, char *s) {
+size_t xdtostrf(double number, const int8_t width, const uint8_t prec, char *s) {
     return xdtostrf_b(number, width, prec, s, ' ');
 }
 
-char *xdtostrf_b(double number, const int8_t width, const uint8_t prec, char *s, const uint8_t pad_digit) {
+size_t xdtostrf_b(double number, const int8_t width, const uint8_t prec, char *s, const uint8_t pad_digit) {
     uint8_t negative = 0;
 
     if (isnan(number)) {
         memcpy(s, "nan", 3);
         s[3] = 0;
-        return s;
+        return 3;
     }
     if (isinf(number)) {
         memcpy(s, "inf", 3);
         s[3] = 0;
-        return s;
+        return 3;
     }
     char *out = s;
 
     int fillme = width;  // how many cells to fill for the integer part
-    
+
     if (prec > 0 && pad_digit==' ') {
         fillme -= (prec + 1);
     }
@@ -266,7 +272,7 @@ char *xdtostrf_b(double number, const int8_t width, const uint8_t prec, char *s,
 
     // make sure the string is terminated
     *out = 0;
-    return s;
+    return out - s;
 }
 
 #define MSTRF(fn) if(f > 0){p+=fn(f, p);}else{*p++ = '0';*p = 0;}return p-str;
@@ -317,13 +323,13 @@ size_t date_to_char(int16_t d, int16_t m, int16_t y, uint8_t format, char *str) 
             else p+=uint_to_char((t>99 && t<=1900) ? t+1900 : t, p);
         }
         else if(t<10) p+=uint_to_char_pad_zero(t, p);
-        else p+=uint_to_char(t, p);        
+        else p+=uint_to_char(t, p);
     }
     return p-str;
 }
 
 size_t f_to_char_f(double f, char *str, uint8_t fractionlen, uint8_t padlen) {
-    bool neg = (f<0); 
+    bool neg = (f<0);
     uint32_t full = (uint32_t)(neg?-f:f);
     char *p = str;
     size_t len=0;
@@ -343,17 +349,17 @@ size_t f_to_char_f(double f, char *str, uint8_t fractionlen, uint8_t padlen) {
     double fr = ((neg?-f:f) - full); // fractional part
     switch
     (fractionlen){
-        case 0: 
+        case 0:
             if(fr>=0.5) ++full;
         break;
-        case 1: 
+        case 1:
             if(fr>=0.95) {
                 ++full; // round up integer part
                 fr=0;
             }
             else if(fr < 0.1 && fr>=0.05) fr=0.1;
         break;
-        case 2: 
+        case 2:
             if(fr>=0.995) {
                 ++full; // round up integer part
                 fr=0;
@@ -361,7 +367,7 @@ size_t f_to_char_f(double f, char *str, uint8_t fractionlen, uint8_t padlen) {
             else if(fr < 0.1 && fr>=0.095) fr=0.1;
             else if(fr < 0.01 && fr>=0.005)  fr=0.01;
         break;
-        case 3: 
+        case 3:
             if(fr>=0.9995) {
                 ++full; // round up integer part
                 fr=0;
@@ -386,7 +392,7 @@ size_t f_to_char_f(double f, char *str, uint8_t fractionlen, uint8_t padlen) {
         fr -= frac;
         if(fr>=0.5){
             //if(fractionlen==1) frac=0;
-            //else 
+            //else
             ++frac;
         }
         len += uint_to_char(frac, p);
@@ -402,15 +408,15 @@ size_t f_to_char(double f, char *str, uint8_t fractionlen) {
 }
 
 size_t f1_to_char(double f, char *str) {
-    return f_to_char(f,str,1);
+    return xftoa(f,str,1);
 }
 
 size_t f2_to_char(double f, char *str) {
-    return f_to_char(f, str, 2);
+    return xftoa(f, str, 2);
 }
 
 size_t f3_to_char(double f, char *str) {
-    return f_to_char(f, str, 3);
+    return xftoa(f, str, 3);
 }
 
 size_t concat(char *dst, size_t dlen, const char *src, size_t len) {
@@ -425,7 +431,7 @@ size_t sec_to_hms_str(uint32_t sec, char *str, bool two_segments) {
     uint16_t m = (sec / 60) % 60;
     uint16_t s = sec % 60;
     char *p = str;
-    const char * mask = two_segments ? "00:00" : "00:00:00"; 
+    const char * mask = two_segments ? "00:00" : "00:00:00";
     size_t len = two_segments ? 5 : 8;
     memcpy(p, mask, len), *(p+len)=0;
     // printf ("sec_to_hms_str: %d %d %d: %s\n", h, m, s, mask);

@@ -13,10 +13,10 @@ size_t xultoa(uint64_t value, char *dst);
 size_t xltoa(int64_t value, char *dst);
 size_t xint_len(uint64_t value);
 
-char *xftoa(double f, char *buf, int precision);
+size_t xftoa(double f, char *buf, int precision);
 
-char *xdtostrf_b(double val, const int8_t width, const uint8_t prec, char *sout, const uint8_t pad_digit);
-char *xdtostrf(double val, const int8_t width, const uint8_t prec, char *sout);
+size_t xdtostrf_b(double val, const int8_t width, const uint8_t prec, char *sout, const uint8_t pad_digit);
+size_t xdtostrf(double val, const int8_t width, const uint8_t prec, char *sout);
 
 size_t int_to_char(int64_t f, char *str);
 size_t uint_to_char(uint64_t f, char *str);

@@ -10,21 +10,21 @@ extern "C" {
 #include <stddef.h>
 
 #define SB strbf_t
-    
+
     typedef struct strbf_s {
         char * cur;
         char * end;
         char * start;
         char * max;
     } strbf_t;
-    
+
     /**
      * @brief Initialize string buffer
      *     If sb is NULL, allocate new buffer
      *     If sb is not NULL, reset buffer
      * @param sb - pointer to string buffer
      * @return pointer to string buffer
-     * */    
+     * */
     SB * strbf_init(SB *sb);
 
     /**
@@ -89,7 +89,7 @@ extern "C" {
      * @return pointer to string buffer
      * */
     SB * strbf_puts_v(SB *sb, int argc, ...);
-    
+
     /**
      * @brief Put arguments into string buffer according to format
      * @param sb - pointer to string buffer
@@ -120,6 +120,14 @@ extern "C" {
      * @param val - double value
      * */
     void strbf_putf(SB *sb, double val);
+
+    /**
+     * @brief Put float into string buffer with precision
+     * @param sb - pointer to string buffer
+     * @param val - double value
+     * @param perc - precision
+     */
+    void strbf_putfd(SB *sb, double val, const uint8_t perc);
 
     /**
      * @brief Put double into string buffer
@@ -293,7 +301,7 @@ extern "C" {
      * @return pointer to string buffer
      * */
     SB * strbf_insert_path(SB *sb, const char *str, size_t at);
-    
+
     /**
      * @brief Prepend path into beginning of string buffer
      * @param sb - pointer to string buffer
@@ -318,14 +326,14 @@ extern "C" {
      * @return pointer to string buffer
      * */
     void strbf_prepends(SB *sb, const char *str);
-    
+
     /**
      * @brief Trim string buffer
      * @param sb - pointer to string buffer
      * @return pointer to string buffer
      * */
     void strbf_trim(SB *sb);
-    
+
     /**
      * @brief Cut schars from beginning of string buffer
      * @param sb - pointer to string buffer
@@ -333,7 +341,7 @@ extern "C" {
      * @return pointer to string buffer
      * */
     void strbf_shift(SB *sb, size_t count);
-    
+
     /**
      * @brief Cut schars from end of string buffer
      * @param sb - pointer to string buffer
@@ -391,9 +399,9 @@ extern "C" {
      * @param sb - pointer to string buffer
      * */
     void strbf_free(SB *sb);
-    
+
 #undef SB
-    
+
 #ifdef __cplusplus
 }
 #endif
