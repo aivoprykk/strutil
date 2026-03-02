@@ -22,7 +22,7 @@
 
 SB *strbf_init(SB *sb) {
   if(!sb) return NULL;
-  sb->start = calloc(BUFSIZ / 2, sizeof(char));
+  sb->start = STRBF_CALLOC(BUFSIZ / 2, sizeof(char));
   sb->cur = sb->start;
   sb->end = sb->start + BUFSIZ / 2 - 1;
   sb->max = 0;
@@ -84,9 +84,9 @@ void sb_grow(SB *sb, size_t need) {
   } while (alloc < length + need);
 
   // sb->start = (char*) realloc(sb->start, alloc + 1);
-  char *data = calloc(alloc + 1, sizeof(char));
+  char *data = STRBF_CALLOC(alloc + 1, sizeof(char));
   memcpy(data, sb->start, length);
-  free(sb->start);
+  STRBF_FREE(sb->start);
   sb->start = data;
   sb->cur = sb->start + length;
   sb->end = sb->start + alloc;
@@ -550,7 +550,7 @@ char *strbf_cur(SB *sb) {
 void strbf_free(SB *sb) {
   if(!sb || sb->max) return;
   if (sb->start) {
-    free(sb->start);
+    STRBF_FREE(sb->start);
     sb->start = 0;
   }
   sb->cur = 0;

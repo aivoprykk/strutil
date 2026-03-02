@@ -9,6 +9,36 @@ extern "C" {
 #include <stdint.h>
 #include <stddef.h>
 
+/*
+ * Configurable allocator interface.
+ * Override any of these macros before including this header to use a custom
+ * allocator (e.g. a memory pool, a debug wrapper, or a different heap region).
+ *
+ * STRBF_CALLOC(count, size)  – allocate zero-initialised memory
+ * STRBF_FREE(ptr)            – release memory allocated via STRBF_CALLOC
+ *
+ * ESP32 default : heap_caps_calloc / heap_caps_free with MALLOC_CAP_INTERNAL
+ *                 (internal SRAM, matches project-wide convention)
+ * Other platforms: standard calloc / free
+ */
+#if defined(ESP_PLATFORM)
+#  include "esp_heap_caps.h"
+#  ifndef STRBF_CALLOC
+#    define STRBF_CALLOC(count, size) heap_caps_calloc((count), (size), MALLOC_CAP_DEFAULT)
+#  endif
+#  ifndef STRBF_FREE
+#    define STRBF_FREE(ptr)           heap_caps_free(ptr)
+#  endif
+#else
+#  include <stdlib.h>
+#  ifndef STRBF_CALLOC
+#    define STRBF_CALLOC(count, size) calloc((count), (size))
+#  endif
+#  ifndef STRBF_FREE
+#    define STRBF_FREE(ptr)           free(ptr)
+#  endif
+#endif
+
 #define SB strbf_t
 
     typedef struct strbf_s {
